@@ -19,15 +19,17 @@ export default {
   text-align: center;
   line-height: 44px;
   box-shadow: 0 1px 1px rgba(100,100,100,.08);
+  width: 100%;
 }
 .left{
-  width:90px;
+  width:60px;
 }
 .right{
-  width:90px;
+  width:60px;
 }
 .center{
   flex: 1;
+
 
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-<div class="goodListItem">
-  <img :src="goodItem.show.img" alt="">
+<div class="goodListItem" @click="itemClick">
+  <img :src="showImage" alt="" @load="ImageLoad">
   <div class="goodsInfo">
     <p>{{goodItem.title}}</p>
     <div class="pandc">
@@ -20,6 +20,21 @@ export default {
       default(){
         return {}
       }
+    },
+  },
+  computed:{
+    showImage(){
+      return this.goodItem.image||this.goodItem.show.img
+    }
+  },
+  methods:{
+    ImageLoad(){
+      //console.log("ImageLoad");
+      this.$bus.$emit('imageLoad')//发送数据总线
+    },
+    itemClick() {
+      // console.log('跳转至详情页');
+      this.$router.push('/Detail/'+this.goodItem.iid)
     }
   }
 }

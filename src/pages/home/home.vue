@@ -3,12 +3,16 @@
   <nav-bar class="home-nav">
     <div slot="center">购物街</div>
   </nav-bar>
+  <tab-control :title="['流行','新款','精选']" @tabclick="tabclick"
+               ref="tabcontrol1" v-show="istab"></tab-control>
   <scroll class="content" ref="scroll"
-          :probeType="3" @scroll="showBack" :pullUpLoad="true" @pullingUp="showLoad">
-    <home-swiper :banners="banners"></home-swiper>
+        :probeType="3" @scroll="showBack"
+          :pullUpLoad="true" @pullingUp="showLoad"><!--  :pullUpLoad="true"@pullingUp="showLoad" -->
+    <home-swiper :banners="banners" @imageLoad="imageLoad"></home-swiper>
     <home-commend-view :recommend="recommend"></home-commend-view>
     <feature></feature>
-    <tab-control :title="['流行','新款','精选']" class="tab-control" @tabclick="tabclick">
+    <tab-control :title="['流行','新款','精选']" class="tab-control" @tabclick="tabclick"
+                 ref="tabcontrol2" >
     </tab-control>
     <goods-list :goods="tagChange"></goods-list>
   </scroll>
@@ -26,6 +30,8 @@ import tabControl from 'components/content/tabControl/TabControl'
 import goodsList from 'components/content/goodsItem/GoodsList'
 import scroll from 'components/common/scroll/Scroll'
 import backTop from 'components/content/backTop/BackTop'
+import {itemListenMixin} from "../../common/mixin";
+import {debounce} from "common/utils";
 
 
 export default {
@@ -38,7 +44,7 @@ export default {
     tabControl,
     goodsList,
     scroll,
-    backTop
+    backTop,
   },
   computed:{
     tagChange(){
@@ -56,7 +62,11 @@ export default {
         'sell': {page: 0, list: []}
       },
       currentTag:'pop',
-      isShowBack:false
+      isShowBack:false,
+      tabcontroll:0,
+      istab:false,
+      saveY:0,
+
     }
   },
 
@@ -67,9 +77,20 @@ export default {
     this.getHomeGoods('sell')
 
   },
+  mixins:[itemListenMixin],
+  activated(){
+    this.$refs.scroll.scroll.scrollTo(0,this.saveY)//跳转至记录的页面的位置
+    this.$refs.scroll.refresh()
+  },
+  deactivated() {
+    this.saveY=this.$refs.scroll.getScrollY()//记录离开页面时的位置
+    this.$bus.$off('imageLoad',this.itemImageListen)
+  },
 
   methods:{
-    /* 业务功能相关*/
+    /* 事件监听相关*/
+
+
     tabclick(index){
       //console.log(index);
       switch (index){
@@ -83,6 +104,8 @@ export default {
           this.currentTag='sell'
               break
       }
+      this.$refs.tabcontrol1.cur=index;
+      this.$refs.tabcontrol2.cur=index;
     },
     backClick(){
       this.$refs.scroll.scrollTo(0,0,250)
@@ -91,12 +114,15 @@ export default {
     showBack(position){
       //console.log(position);
       this.isShowBack=(-position.y)>1000
+      this.istab=(-position.y) > this.tabcontroll
     },
     showLoad(){
       this.getHomeGoods(this.currentTag)
-      this.$refs.scroll.scroll.refresh()//将显示高度变为图片加载完的高度，消除下拉卡住的bug
+      // this.$refs.scroll.scroll.refresh()//将显示高度变为图片加载完的高度，消除下拉卡住的bug
     },
-
+    imageLoad(){
+      this.tabcontroll = this.$refs.tabcontrol2.$el.offsetTop;
+    },
 
     /* 网络接口相关*/
     getHomeMultidata() {
@@ -127,12 +153,13 @@ export default {
   background-color: var(--color-tint);
   color: white;
 
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 9;
+  /*position: fixed;*/
+  /*left: 0;*/
+  /*right: 0;*/
+  /*top: 0;*/
+  /*z-index: 9;*/
 }
+
 #home{
   /*padding-top: 44px;*/
   height: 100vh;
@@ -140,14 +167,14 @@ export default {
 
 }
 .tab-control{
-  position: sticky;
+  /*position: sticky;*/
   top:44px;
   z-index:9;
 }
 .content{
-  height: calc(100% - 49px);
+  height: calc(100% - 93px);
   overflow: hidden;
-  margin-top: 44px;
+  /*margin-top: 44px;*/
   /*position: absolute;*/
   /*top: 44px;*/
   /*bottom: 49px;*/
